@@ -1,12 +1,14 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 
 def get_upcoming_birthdays(users, days=7):
     upcoming_birthdays = []
     today = date.today()
 
+    format_date = "%d.%m.%Y"
+
     for user in users:
-        birthday_this_year = user["birthday"].replace(year=today.year)
+        birthday_this_year = datetime.strptime(user["birthday"], format_date).date().replace(year=today.year)
 
         """
         Додайте на цьому місці перевірку, чи не буде 
@@ -21,7 +23,7 @@ def get_upcoming_birthdays(users, days=7):
             якщо день народження припадає на вихідний. 
             """
             birthday_this_year = adjust_for_weekend(birthday_this_year)
-            congratulation_date_str = date_to_string(birthday_this_year)
+            congratulation_date_str = date_to_string(birthday_this_year, format_date)
             upcoming_birthdays.append({"name": user["name"], "congratulation_date": congratulation_date_str})
     return upcoming_birthdays
 
@@ -30,8 +32,8 @@ def adjust_for_weekend(birthday):
         return find_next_weekday(birthday, 0)
     return birthday
 
-def date_to_string(date):
-    return date.strftime("%Y.%m.%d")
+def date_to_string(date, format_date):
+    return date.strftime(format_date)
 
 def find_next_weekday(start_date, weekday):
     days_ahead = weekday - start_date.weekday()

@@ -34,12 +34,10 @@ class Birthday(Field):
 
     def __init__(self, value):
         try:
-            self.value = datetime.strptime(value, "%d.%m.%Y").date()
+            format_date = "%d.%m.%Y"
+            self.value = datetime.strptime(value, format_date).date().strftime(format_date)
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
-    
-    def to_str_format(self):
-        return self.value.strftime("%d.%m.%Y")
         
 
 class Record:
@@ -50,7 +48,10 @@ class Record:
         self.birthday = None
 
     def add_phone(self, phone_number: str):
-        self.phones.append(Phone(phone_number))
+        try:
+            self.phones.append(Phone(phone_number))
+        except FormatPhoneNumberException:
+            raise
 
     def remove_phone(self, phone_number: str):
          self.phones = [phone for phone in self.phones if phone.value != phone_number]
@@ -74,7 +75,8 @@ class Record:
         self.birthday = Birthday(birthday)
 
     def __str__(self):
-        return f"Contact name: {self.name.value}, phones: {', '.join(p.value for p in self.phones)}"
+        birthday_str = f", birthday: {self.birthday.value}" if self.birthday else ""
+        return f"Contact name: {self.name.value}, phones: {', '.join(p.value for p in self.phones)}{birthday_str}"
 
 class AddressBook(UserDict):
        
@@ -92,12 +94,15 @@ class AddressBook(UserDict):
             del self.data[name]
     
     def get_upcoming_birthdays(self) -> list:
-        return get_upcoming_birthdays([
-            {
-                "name": name, 
-                "birthday": contact.birthday.value
-            } for name, contact in self.data.items()
-            ])
+        try:
+            return get_upcoming_birthdays([
+                {
+                    "name": name, 
+                    "birthday": contact.birthday.value
+                } for name, contact in self.data.items()
+                ])
+        except AttributeError:
+            raise
 
     def __str__(self):
         return "".join(f"{record}\n" for record in self.data.values())

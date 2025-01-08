@@ -1,7 +1,7 @@
 from datetime import datetime
 from colorama import Fore
 
-from address_book import AddressBook, Birthday, Phone, Record
+from address_book import AddressBook, Birthday, FormatPhoneNumberException, Phone, Record
 from birthdays import get_upcoming_birthdays
 
 def input_error(func):
@@ -26,7 +26,11 @@ def add_contact(args, book: AddressBook):
         book.add_record(record)
         message = "added."
     if phone:
-        record.add_phone(phone)
+        try:
+            record.add_phone(phone)
+        except FormatPhoneNumberException as e:
+            return str(e)
+
     return f"Contact {Fore.GREEN}{name}{Fore.RESET} with phone {Fore.GREEN}{phone}{Fore.RESET} {message}."
 
 @input_error
@@ -77,56 +81,25 @@ def show_birthday(args, book):
     name, = args
     record: Record = book.find(name)
     if record:
-        birthday = record.birthday
-        birthday_formated = birthday.to_str_format()
-        return f"Contact {Fore.GREEN}{name}{Fore.RESET} -> birthday: {Fore.GREEN}{birthday_formated}{Fore.RESET}."
+        return f"Contact {Fore.GREEN}{name}{Fore.RESET} -> birthday: {Fore.GREEN}{record.birthday.value}{Fore.RESET}."
     else:
         return f"{Fore.RED}Contact not found{Fore.RESET}"
 
 @input_error
 def birthdays(args, book: AddressBook):
     result = f"{Fore.CYAN}All upcoming birthdays:{Fore.RESET} \n"
-    upcoming_birthdays = book.get_upcoming_birthdays()
-    for i, contact in enumerate(upcoming_birthdays, start=1):
-        name = contact["name"]
-        congratulation_date = contact["congratulation_date"]
-        result += f"{i}: {Fore.GREEN}{name}{Fore.RESET} - {Fore.GREEN}{congratulation_date}{Fore.RESET}\n"
+    try:
+        for i, contact in enumerate(book.get_upcoming_birthdays(), start=1):
+            name = contact["name"]
+            congratulation_date = contact["congratulation_date"]
+            result += f"{i}: {Fore.GREEN}{name}{Fore.RESET} - {Fore.GREEN}{congratulation_date}{Fore.RESET}\n"
+    except AttributeError:
+        return "Помилка, не всі дати народження заповнені"
     return result[:-1]
 
-    
+
 @input_error
 def parse_input(user_input):
     cmd, *args = user_input.split()
     cmd = cmd.strip().lower()
     return cmd, *args
-
-def main():
-    print(f"{Fore.GREEN}Welcome to the assistant bot!{Fore.RESET}")
-    book = AddressBook()
-    while True:
-        user_input = input(f"Enter a command: ").strip().lower()
-        command, *args = parse_input(user_input)
-        if command in ["close", "exit"]:
-            print(f"{Fore.YELLOW} Good bye! {Fore.RESET}")
-            break
-        elif command == "hello":
-            print(f"{Fore.YELLOW}How can I help you?{Fore.RESET}")
-        elif command == "add":
-            print(add_contact(args, book))
-        elif command == "change":
-            print(change_contact(args, book))
-        elif command == "phone":
-            print(show_phone(args, book))
-        elif command == "all":
-            print(show_all(args, book))
-        elif command == "add-birthday":
-            print(add_birthday(args, book))
-        elif command == "show-birthday":
-            print(show_birthday(args, book))
-        elif command == "birthdays":
-            print(birthdays(args, book))
-        else:
-            print(f"{Fore.RED}Invalid command.{Fore.RESET}")
-
-if __name__ == "__main__":
-    main()
