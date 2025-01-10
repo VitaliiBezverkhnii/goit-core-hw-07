@@ -88,13 +88,12 @@ def show_birthday(args, book):
 @input_error
 def birthdays(args, book: AddressBook):
     result = f"{Fore.CYAN}All upcoming birthdays:{Fore.RESET} \n"
-    try:
-        for i, contact in enumerate(book.get_upcoming_birthdays(), start=1):
-            name = contact["name"]
-            congratulation_date = contact["congratulation_date"]
-            result += f"{i}: {Fore.GREEN}{name}{Fore.RESET} - {Fore.GREEN}{congratulation_date}{Fore.RESET}\n"
-    except AttributeError:
-        return "Помилка, не всі дати народження заповнені"
+    if not book.get_upcoming_birthdays():
+        return f"{Fore.RED}No upcoming birthdays found.{Fore.RESET}"
+    for i, contact in enumerate(book.get_upcoming_birthdays(), start=1):
+        name = contact["name"]
+        congratulation_date = contact["congratulation_date"]
+        result += f"{i}: {Fore.GREEN}{name}{Fore.RESET} - {Fore.GREEN}{congratulation_date}{Fore.RESET}\n"
     return result[:-1]
 
 

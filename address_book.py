@@ -94,15 +94,14 @@ class AddressBook(UserDict):
             del self.data[name]
     
     def get_upcoming_birthdays(self) -> list:
-        try:
-            return get_upcoming_birthdays([
-                {
+        birthdays = []
+        for name, contact in self.data.items():
+            if contact.birthday:
+                birthdays.append({
                     "name": name, 
                     "birthday": contact.birthday.value
-                } for name, contact in self.data.items()
-                ])
-        except AttributeError:
-            raise
+                })
+        return get_upcoming_birthdays(birthdays)
 
     def __str__(self):
         return "".join(f"{record}\n" for record in self.data.values())
